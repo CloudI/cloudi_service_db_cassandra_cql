@@ -69,116 +69,160 @@
 
 -behaviour(cloudi_service).
 
+%% public API
+-export([executeQuery/3,
+    executeQuery/4,
+    executePreparedQuery/4,
+    executePreparedQuery/5]).
+
 %% cloudi_service callbacks
 -export([cloudi_service_init/3,
-  cloudi_service_handle_request/11,
-  cloudi_service_handle_info/3,
-  cloudi_service_terminate/2]).
+    cloudi_service_handle_request/11,
+    cloudi_service_handle_info/3,
+    cloudi_service_terminate/2]).
 
 -include_lib("cloudi_core/include/cloudi_logger.hrl").
 -include_lib("erlcql/include/erlcql.hrl").
 
--type dispatcher()      :: cloudi_service:dispatcher() | cloudi:context().
+-type dispatcher() :: cloudi_service:dispatcher() | cloudi:context().
 
 -record(state, {
-  client              :: pid(),
-  consistency         :: atom()
+    client :: pid(),
+    consistency :: atom()
 }).
 
 
--type cql_name()       :: atom().
--type cql_params()     :: [binary() | integer() | none()].
+-type cql_name() :: atom().
+-type cql_params() :: [binary() | integer() | none()].
 
 
--type executeRequest() :: { QueryName :: cql_name(),
-                            Params :: cql_params(),
-                            Consistency :: consistency() | none()}.
+-type preparedQueryRequest() :: {QueryName :: cql_name(),
+    Params :: cql_params(),
+    Consistency :: consistency() | none()}.
 
--type queryRequest() ::   { QueryString :: string(),
-                            Consistency :: consistency() | none()}.
+-type queryRequest() :: {QueryString :: string() | binary(),
+    Consistency :: consistency() | none()}.
 
 
--type service_request() :: executeRequest() | queryRequest().
+-type service_request() :: preparedQueryRequest() | queryRequest().
 
--type query()           :: {Name :: cql_name(), Query :: binary()}.
+-type query() :: {Name :: cql_name(), Query :: binary()}.
 
--type service_name() :: { service_name, ServiceName :: string() }.
--type connection_options() :: { connection_options, [ {host, Host :: string()} |
-                                                      {port, Port :: integer()} |
-                                                      {username, Username :: binary()} |
-                                                      {password, Password :: binary()} |
-                                                      {use, Keyspace :: binary()} |
-                                                      {prepare, [query()]} |
-                                                      {keepalive, Value :: boolean()} |
-                                                      {auto_reconnect, Value :: boolean()} |
-                                                      {reconnect_start, Value :: integer()} |
-                                                      {reconnect_max, Value :: integer()} |
-                                                      {cql_version, CqlVersion :: binary()} |
-                                                      {event_fun, EventFun :: pid() | fun() } |
-                                                      {events, Events :: [event()]} |
-                                                      {compression, Compression :: compression()} |
-                                                      {tracing, Tracing :: boolean()} |
-                                                      {parent, Parent :: pid()}
-]}.
+-type service_name() :: {service_name, ServiceName :: string()}.
+-type connection_options() :: {connection_options,
+    [{host, Host :: string()} |
+    {port, Port :: integer()} |
+    {username, Username :: binary()} |
+    {password, Password :: binary()} |
+    {use, Keyspace :: binary()} |
+    {prepare, [query()]} |
+    {keepalive, Value :: boolean()} |
+    {auto_reconnect, Value :: boolean()} |
+    {reconnect_start, Value :: integer()} |
+    {reconnect_max, Value :: integer()} |
+    {cql_version, CqlVersion :: binary()} |
+    {event_fun, EventFun :: pid() | fun()} |
+    {events, Events :: [event()]} |
+    {compression, Compression :: compression()} |
+    {tracing, Tracing :: boolean()} |
+    {parent, Parent :: pid()}
+    ]}.
 
--type consistency_option()        :: { consistency, Consistency :: consistency()}.
--type args()  :: [ service_name() | connection_options() | consistency_option()].
+-type consistency_option() :: {consistency, Consistency :: consistency()}.
+-type args() :: [service_name() | connection_options() | consistency_option()].
+
+-type cloudi_send_sync_response() ::
+{ok, ResponseInfo :: cloudi:response_info(), Response :: response()} |
+{ok, Response :: response()} |
+{error, Reason :: cloudi:error_reason_sync()}.
+
+%%%------------------------------------------------------------------------
+%%% Public interface
+%%%------------------------------------------------------------------------
+%%% Path: Service Prefix + ServiceName,
+%%% Query: valid CQL query
+%%% QueryName: prepared query id
+
+-spec executeQuery(dispatcher(), string(), string() | binary()) -> cloudi_send_sync_response().
+executeQuery(Dispatcher, Name, Query) ->
+    cloudi:send_sync(Dispatcher, Name, {as_binary(Query)}).
+
+-spec executeQuery(dispatcher(), string(), string() | binary(), consistency()) -> cloudi_send_sync_response().
+executeQuery(Dispatcher, Name, Query, Consistency) ->
+    cloudi:send_sync(Dispatcher, Name, {as_binary(Query), Consistency}).
+
+-spec executePreparedQuery(dispatcher(), string(), cql_name(), cql_params()) -> cloudi_send_sync_response().
+executePreparedQuery(Dispatcher, Name, QueryName, Values) ->
+    cloudi:send_sync(Dispatcher, Name, {QueryName, Values}).
+
+-spec executePreparedQuery(dispatcher(), string(), cql_name(), cql_params(), consistency()) -> cloudi_send_sync_response().
+executePreparedQuery(Dispatcher, Name, QueryName, Values, Consistency) ->
+    cloudi:send_sync(Dispatcher, Name, {QueryName, Values, Consistency}).
 
 
 %%%------------------------------------------------------------------------
 %%% Callback functions from cloudi_service
 %%%------------------------------------------------------------------------
 -spec cloudi_service_init(args(), string(), dispatcher()) ->
-  response().
+    response().
 cloudi_service_init(Args, _Prefix, Dispatcher) ->
 
-  [ {service_name, ServiceName},
-    {connection_options, ConnectionOptions},
-    {consistency, Consistency}] = Args,
+    [{service_name, ServiceName},
+        {connection_options, ConnectionOptions},
+        {consistency, Consistency}] = Args,
 
-  {ok, ClientPid} = erlcql_client:start_link(ConnectionOptions),
+    {ok, ClientPid} = erlcql_client:start_link(ConnectionOptions),
 
-  cloudi_service:subscribe(Dispatcher,ServiceName),
-      {ok, #state{client = ClientPid, consistency = Consistency}}.
+    cloudi_service:subscribe(Dispatcher, ServiceName),
+    {ok, #state{client = ClientPid, consistency = Consistency}}.
 
--spec cloudi_service_handle_request(atom(), string(), string(), any(), service_request(), int, int, int, pid(), tuple(), dispatcher())->
-  {reply, any()}.
+
+
+-spec cloudi_service_handle_request(atom(), string(), string(), any(), service_request(), int, int, int, pid(), tuple(), dispatcher()) ->
+    {reply, any()}.
 cloudi_service_handle_request(_Type, _Name, _Pattern, _RequestInfo, Request,
     _Timeout, _Priority, _TransId, _Pid,
     #state{client = ClientPid,
-    consistency = Consistency
+        consistency = Consistency
     } = State,
     _Dispatcher) ->
 
-  Res =
-  case Request of
-    {QueryName, Values} when (is_atom(QueryName) and is_list(Values)) ->
-    erlcql_client:async_execute(ClientPid, QueryName, Values, Consistency);
-    {QueryName, Values, RequestConsistency}
-          when (is_atom(QueryName) and is_list(Values) and is_atom(RequestConsistency))->
-    erlcql_client:async_execute(ClientPid, QueryName, Values, RequestConsistency);
+    Res =
+        case Request of
+            {QueryName, Values} when (is_atom(QueryName) and is_list(Values)) ->
+                erlcql_client:async_execute(ClientPid, QueryName, Values, Consistency);
+            {QueryName, Values, RequestConsistency}
+                when (is_atom(QueryName) and is_list(Values) and is_atom(RequestConsistency)) ->
+                erlcql_client:async_execute(ClientPid, QueryName, Values, RequestConsistency);
 
-    {Query} when is_list(Query)->
-      erlcql_client:async_query(ClientPid, Query, Consistency);
-    {Query, RequestConsistency} when (is_list(Query) and is_atom(RequestConsistency))->
-      erlcql_client:async_query(ClientPid, Query, RequestConsistency);
-    _-> {error, "Invalid Request"}
-  end,
+            {Query} when is_binary(Query) ->
+                erlcql_client:async_query(ClientPid, Query, Consistency);
+            {Query, RequestConsistency} when (is_binary(Query) and is_atom(RequestConsistency)) ->
+                erlcql_client:async_query(ClientPid, Query, RequestConsistency);
+            _ -> {error, "Invalid Request"}
+        end,
 
-  case Res of
-    {ok, QueryRef} ->
-      {reply, erlcql_client:await(QueryRef), State};
-    {error, _Reason} = Error ->
-      {reply, Error, State}
-  end.
+    case Res of
+        {ok, QueryRef} ->
+            {reply, erlcql_client:await(QueryRef), State};
+        {error, _Reason} = Error ->
+            {reply, Error, State}
+    end.
 
 cloudi_service_handle_info(Request, State, _) ->
-  ?LOG_INFO("Unknown info ~p", [Request]),
-  {noreply, State}.
+    ?LOG_INFO("Unknown info ~p", [Request]),
+    {noreply, State}.
 
 cloudi_service_terminate(_, _State) ->
-  ok.
+    ok.
 
+
+%%%------------------------------------------------------------------------
+%%% Private functions
+%%%------------------------------------------------------------------------
+
+as_binary(Query) when is_binary(Query) -> Query;
+as_binary(Query) when is_list(Query) -> list_to_binary(Query).
 
 
 
