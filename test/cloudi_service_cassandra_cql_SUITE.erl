@@ -174,7 +174,7 @@ setup_cloudi_service(Config) ->
         {count_process, ?TEST_POOL_SIZE},
         {max_r, 5},
         {max_t, 300},
-        {options, [{automatic_loading, false}, {queue_limit, 1}]}],
+        {options, [{automatic_loading, false}]}],
     {ok, ServiceIDs} = cloudi_service_api:services_add([ServiceConfig], ?DEFAULT_TIMEOUT_INIT),
     [{serviceIDs, ServiceIDs} | Config].
 
@@ -255,7 +255,11 @@ test_cloudi_service_cassandra_cql(_Config) ->
         {[[0]],
             [{<<"count">>,
                 bigint}]}}} = cloudi_service_db_cassandra_cql:executeQuery(
-        Ctx, Name, select_count_all_from_test_table(), all).
+        Ctx, Name, select_count_all_from_test_table(), all),
+
+
+    CleanupQuery  = "drop keyspace test_keyspace;",
+    {ok,{ok,dropped}} = cloudi_service_db_cassandra_cql:executeQuery(Ctx, Name, CleanupQuery).
 
 
 
