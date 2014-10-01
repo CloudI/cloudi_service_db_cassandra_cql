@@ -2,8 +2,8 @@
 % ex: set ft=erlang fenc=utf-8 sts=4 ts=4 sw=4 et:
 
 {application, cloudi_service_db_cassandra_cql,
-  [{description, "DB Cassandra CQL CloudI Service"},
-    {vsn, "1.0.0"},
+  [{description, "Cassandra CQL CloudI Service"},
+    {vsn, "1.3.3"},
     {modules, [
       cloudi_service_db_cassandra_cql
     ]},
