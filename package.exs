@@ -46,7 +46,7 @@ defmodule CloudIServiceDbCassandraCql do
 
   defp package do
     [files: ~w(src doc test rebar.config README.markdown),
-     contributors: ["Michael Truog"],
+     contributors: ["Irina Guberman", "Michael Truog"],
      licenses: ["BSD"],
      links: %{"Website" => "http://cloudi.org",
               "GitHub" => "https://github.com/CloudI/" <>
