@@ -1,6 +1,8 @@
 cloudi_service_db_cassandra_cql
 ===============================
 
+[![Build Status](https://secure.travis-ci.org/CloudI/cloudi_service_db_cassandra_cql.png?branch=master)](http://travis-ci.org/CloudI/cloudi_service_db_cassandra_cql)
+
 **CloudI DB Cassandra CQL Service**
 
 CloudI layer on top of erlcql from [https://github.com/rpt/erlcql.git](http://)
