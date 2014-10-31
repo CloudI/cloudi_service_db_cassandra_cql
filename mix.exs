@@ -4,6 +4,7 @@ defmodule CloudIServiceDbCassandraCql do
   def project do
     [app: :cloudi_service_db_cassandra_cql,
      version: "1.4.0-rc.4",
+     language: :erlang,
      description: description,
      package: package,
      deps: deps]
