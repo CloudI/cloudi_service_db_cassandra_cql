@@ -3,7 +3,7 @@ defmodule CloudIServiceDbCassandraCql do
 
   def project do
     [app: :cloudi_service_db_cassandra_cql,
-     version: "1.4.0",
+     version: "1.5.0",
      language: :erlang,
      description: description,
      package: package,
@@ -14,7 +14,7 @@ defmodule CloudIServiceDbCassandraCql do
     [{:erlcql,
       [git: "https://github.com/rpt/erlcql.git",
        branch: "develop"]},
-     {:cloudi_core, "~> 1.4.0"}]
+     {:cloudi_core, "~> 1.5.0"}]
   end
 
   defp description do

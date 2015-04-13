@@ -14,7 +14,7 @@
    <h3><a name="CloudI_DB_Cassandra_CQL_Module">CloudI DB Cassandra CQL Module</a></h3>.
 <p>Copyright © 2014 Irina Guberman</p>
 
-<p><b>Version:</b> 1.4.0 Dec 20 2014 15:47:40
+<p><b>Version:</b> 1.5.0 Apr 12 2015 21:06:46
   ------------------------------------------------------------------------</p>
 <p><b>Behaviours:</b> <a href="deps/cloudi_core/doc/cloudi_service.html"><tt>cloudi_service</tt></a>.</p>
 <p><b>Authors:</b> Irina Guberman (<a href="mailto:irina.guberman@gmail.com"><tt>irina.guberman@gmail.com</tt></a>).</p>
@@ -39,12 +39,12 @@ All failures from erlcql_client will be of the form
   
 <h2><a name="types">Data Types</a></h2>
 
+<h3 class="typedecl"><a name="type-agent">agent()</a></h3>
+<p><tt>agent() = <a href="deps/cloudi_core/doc/cloudi.html#type-agent">cloudi:agent()</a></tt></p>
+
+
 <h3 class="typedecl"><a name="type-args">args()</a></h3>
 <p><tt>args() = [{service_name, ServiceName::<a href="#type-service_name">service_name()</a>} | {connection_options, ConnectionOptions::<a href="#type-connection_options">connection_options()</a>} | {consistency, Consistency::<a href="#type-consistency">consistency()</a>}]</tt></p>
-
-
-<h3 class="typedecl"><a name="type-cloudi_cql_response">cloudi_cql_response()</a></h3>
-<p><tt>cloudi_cql_response() = <a href="#type-response">response()</a> | {error, Reason::<a href="deps/cloudi_core/doc/cloudi.html#type-error_reason_sync">cloudi:error_reason_sync()</a>}</tt></p>
 
 
 <h3 class="typedecl"><a name="type-connection_options">connection_options()</a></h3>
@@ -55,8 +55,8 @@ All failures from erlcql_client will be of the form
 <p><tt>cql_name() = atom()</tt></p>
 
 
-<h3 class="typedecl"><a name="type-dispatcher">dispatcher()</a></h3>
-<p><tt>dispatcher() = <a href="deps/cloudi_core/doc/cloudi_service.html#type-dispatcher">cloudi_service:dispatcher()</a> | <a href="deps/cloudi_core/doc/cloudi.html#type-context">cloudi:context()</a></tt></p>
+<h3 class="typedecl"><a name="type-external_response">external_response()</a></h3>
+<p><tt>external_response() = {<a href="#type-response">response()</a>, NewAgent::<a href="#type-agent">agent()</a>} | {{error, Reason::<a href="deps/cloudi_core/doc/cloudi.html#type-error_reason_sync">cloudi:error_reason_sync()</a>}, NewAgent::<a href="#type-agent">agent()</a>}</tt></p>
 
 
 <h3 class="typedecl"><a name="type-query">query()</a></h3>
@@ -68,7 +68,7 @@ All failures from erlcql_client will be of the form
 
 
 <h3 class="typedecl"><a name="type-service_name">service_name()</a></h3>
-<p><tt>service_name() = {service_name, ServiceName::string()}</tt></p>
+<p><tt>service_name() = <a href="deps/cloudi_core/doc/cloudi.html#type-service_name">cloudi:service_name()</a></tt></p>
 
 
 <h2><a name="index">Function Index</a></h2>
@@ -96,7 +96,7 @@ All failures from erlcql_client will be of the form
 
 <h3 class="function"><a name="cloudi_service_init-4">cloudi_service_init/4</a></h3>
 <div class="spec">
-<p><tt>cloudi_service_init(Args::<a href="#type-args">args()</a>, _Prefix::<a href="deps/cloudi_core/doc/cloudi_service.html#type-service_name_pattern">cloudi_service:service_name_pattern()</a>, _Timeout::<a href="deps/cloudi_core/doc/cloudi_service_api.html#type-timeout_milliseconds">cloudi_service_api:timeout_milliseconds()</a>, Dispatcher::<a href="#type-dispatcher">dispatcher()</a>) -&gt; {ok, #state{}}</tt><br></p>
+<p><tt>cloudi_service_init(Args, Prefix, Timeout, Dispatcher) -&gt; any()</tt></p>
 </div>
 
 <h3 class="function"><a name="cloudi_service_terminate-3">cloudi_service_terminate/3</a></h3>
@@ -106,26 +106,26 @@ All failures from erlcql_client will be of the form
 
 <h3 class="function"><a name="execute_prepared_query-4">execute_prepared_query/4</a></h3>
 <div class="spec">
-<p><tt>execute_prepared_query(Dispatcher::<a href="#type-dispatcher">dispatcher()</a>, Name::string(), QueryName::<a href="#type-cql_name">cql_name()</a>, Values::<a href="#type-values">values()</a>) -&gt; <a href="#type-cloudi_cql_response">cloudi_cql_response()</a></tt><br></p>
+<p><tt>execute_prepared_query(Agent::<a href="#type-agent">agent()</a>, Name::<a href="#type-service_name">service_name()</a>, QueryName::<a href="#type-cql_name">cql_name()</a>, Values::<a href="#type-values">values()</a>) -&gt; <a href="#type-external_response">external_response()</a></tt><br></p>
 </div>
 
 <h3 class="function"><a name="execute_prepared_query-5">execute_prepared_query/5</a></h3>
 <div class="spec">
-<p><tt>execute_prepared_query(Dispatcher::<a href="#type-dispatcher">dispatcher()</a>, Name::string(), QueryName::<a href="#type-cql_name">cql_name()</a>, Values::<a href="#type-values">values()</a>, Consistency::<a href="#type-consistency">consistency()</a>) -&gt; <a href="#type-cloudi_cql_response">cloudi_cql_response()</a></tt><br></p>
+<p><tt>execute_prepared_query(Agent::<a href="#type-agent">agent()</a>, Name::<a href="#type-service_name">service_name()</a>, QueryName::<a href="#type-cql_name">cql_name()</a>, Values::<a href="#type-values">values()</a>, Consistency::<a href="#type-consistency">consistency()</a>) -&gt; <a href="#type-external_response">external_response()</a></tt><br></p>
 </div>
 
 <h3 class="function"><a name="execute_query-3">execute_query/3</a></h3>
 <div class="spec">
-<p><tt>execute_query(Dispatcher::<a href="#type-dispatcher">dispatcher()</a>, Name::string(), Query::<a href="#type-query">query()</a>) -&gt; <a href="#type-cloudi_cql_response">cloudi_cql_response()</a></tt><br></p>
+<p><tt>execute_query(Agent::<a href="#type-agent">agent()</a>, Name::<a href="#type-service_name">service_name()</a>, Query::<a href="#type-query">query()</a>) -&gt; <a href="#type-external_response">external_response()</a></tt><br></p>
 </div>
 
 <h3 class="function"><a name="execute_query-4">execute_query/4</a></h3>
 <div class="spec">
-<p><tt>execute_query(Dispatcher::<a href="#type-dispatcher">dispatcher()</a>, Name::string(), Query::<a href="#type-query">query()</a>, Consistency::<a href="#type-consistency">consistency()</a>) -&gt; <a href="#type-cloudi_cql_response">cloudi_cql_response()</a></tt><br></p>
+<p><tt>execute_query(Agent::<a href="#type-agent">agent()</a>, Name::<a href="#type-service_name">service_name()</a>, Query::<a href="#type-query">query()</a>, Consistency::<a href="#type-consistency">consistency()</a>) -&gt; <a href="#type-external_response">external_response()</a></tt><br></p>
 </div>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
-<p><i>Generated by EDoc, Dec 20 2014, 15:47:40.</i></p>
+<p><i>Generated by EDoc, Apr 12 2015, 21:06:46.</i></p>
 </body>
 </html>
